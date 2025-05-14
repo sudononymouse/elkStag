@@ -36,9 +36,12 @@ services:
       MONITORING_INTERNAL_PASSWORD: ${MONITORING_INTERNAL_PASSWORD:-}
       BEATS_SYSTEM_PASSWORD: ${BEATS_SYSTEM_PASSWORD:-}
     networks:
-      - elk
+      - tailnet
     depends_on:
       - elasticsearch
+        labels:
+      tsdproxy.enable: true
+      tsdproxy.name: setup
 
   elasticsearch:
     build:
@@ -62,8 +65,11 @@ services:
       # see: https://www.elastic.co/docs/deploy-manage/deploy/self-managed/bootstrap-checks
       discovery.type: single-node
     networks:
-      - elk
+      - tailnet
     restart: unless-stopped
+    labels:
+      tsdproxy.enable: true
+      tsdproxy.name: elastic
 
   logstash:
     build:
@@ -82,10 +88,13 @@ services:
       LS_JAVA_OPTS: -Xms256m -Xmx256m
       LOGSTASH_INTERNAL_PASSWORD: ${LOGSTASH_INTERNAL_PASSWORD:-}
     networks:
-      - elk
+      - tailnet
     depends_on:
       - elasticsearch
     restart: unless-stopped
+    labels:
+      tsdproxy.enable: true
+      tsdproxy.name: log
 
   kibana:
     build:
@@ -99,14 +108,17 @@ services:
     environment:
       KIBANA_SYSTEM_PASSWORD: ${KIBANA_SYSTEM_PASSWORD:-}
     networks:
-      - elk
+      - tailnet
     depends_on:
       - elasticsearch
     restart: unless-stopped
+    labels:
+      tsdproxy.enable: true
+      tsdproxy.name: kibana
 
 networks:
-  elk:
-    driver: bridge
+  tailnet:
+    external: true
 
 volumes:
   elasticsearch:
